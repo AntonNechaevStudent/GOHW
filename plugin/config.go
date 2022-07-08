@@ -1,19 +1,78 @@
-package main 
+package config 
 
 import "fmt"
-import "config/plugin"
+import "net/http"
+import "io/ioutil"
+import "gopkg.in/yaml.v3"
+import "net/url"
 
-func main() {
+type MyData struct {
+            Port int 
+            Db_url string
+            Jaeger_url string
+            Sentry_url string 
+            Kafka_broker string
+            Some_app_id string
+            Some_app_key string
+            New_type_url string `default:"sdsdfds"`
+        
+    }
+func GetConf(url string) (result MyData){
+        req, err := http.Get(url)
+        if err != nil {
+            fmt.Println("GetFATAL")
+        }
+        defer req.Body.Close()
+        b, err := ioutil.ReadAll(req.Body)
+        if err != nil {
+            fmt.Println("GetFATAL")
+        }
+        // fmt.Printf("%s\n", b)
+        c := &MyData{}
+        yaml.Unmarshal(b, c)
+        return *c
     
-    conf := config.GetConf("https://gist.githubusercontent.com/rumyantseva/26bee59a04d416c55e0e7e8155717d59/raw/02d603e96b31158edbfe46e6655db51ad51a2d3c/conf.yaml")
-    
-    fmt.Printf("%+v", conf)
-    confValid := config.ValidUrl(conf)
-    fmt.Printf("%+v\n",confValid)
-    config.PrintConfig(conf)
-    config.PrintConfig(confValid)
+    }    
 
+// func main() {
+    
+//     conf := getConf("https://gist.githubusercontent.com/rumyantseva/26bee59a04d416c55e0e7e8155717d59/raw/02d603e96b31158edbfe46e6655db51ad51a2d3c/conf.yaml")
+//     fmt.Printf("%+v", conf)
+
+// }
+
+func ValidUrl(arg MyData) (result MyData) {
+    result = arg
+    result.Db_url = pars(arg.Db_url)
+    result.Jaeger_url = pars(arg.Jaeger_url)
+    result.Sentry_url = pars(arg.Sentry_url)
+    result.New_type_url = pars(arg.New_type_url)
+    return result
+    }
+func pars(str string) (res string){
+    _, err := url.Parse(str) 
+    if str == "" {
+        res = "err"
+        return res
+    }
+    if err != nil {
+        res = "err"} else {res = str}
+        return res
+    }
+func PrintConfig(arg MyData) {
+    fmt.Println("Port: ",arg.Port);
+    fmt.Println("Db url: ",arg.Db_url);
+    fmt.Println("Jaeger url: ",arg.Jaeger_url);
+    fmt.Println("Sentry url: ",arg.Sentry_url);
+    fmt.Println("Kafka: ",arg.Kafka_broker);
+    fmt.Println("App id: ",arg.Some_app_id); 
+    fmt.Println("App key: ",arg.Some_app_key);
+    fmt.Println("New url: ",arg.New_type_url); 
+    
 }
+
+    
+
 
 
 
